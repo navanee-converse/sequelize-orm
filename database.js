@@ -1,5 +1,4 @@
-const {Sequelize,DataTypes,Op, where} = require("sequelize")
-const { Where } = require("sequelize/lib/utils")
+const {Sequelize,DataTypes,Op} = require("sequelize")
 require('dotenv').config()
 
 const dbname = process.env.dbname
@@ -21,7 +20,12 @@ const employee = sequelize.define('Employee',{
     },
     name:{
         type:DataTypes.STRING,
-        allowNull:false
+        allowNull:false,
+        get()
+        {
+            const value = this.getDataValue('name')
+            return value.toUpperCase()
+        }
     },
     mail:{
         type:DataTypes.STRING,
@@ -32,7 +36,14 @@ const employee = sequelize.define('Employee',{
         type:DataTypes.STRING,
         allowNull:false
     }
-},{freezeTableName:true})
+},
+{
+    freezeTableName:true,
+    paranoid:true,
+    deletedAt:'deleteTime'
+})
+
+sequelize.sync({alter:true})
 
 const User = sequelize.models.Employee
 
@@ -48,7 +59,7 @@ async function add(name,mail,dept)
 
 async function viewAll()
 {
-    const user = await User.findAll();
+    const user = await User.findAll({paranoid:false});
     return user
 }
 
@@ -81,6 +92,5 @@ async function selectById(id)
     const user = await User.findByPk(id)
     return user
 }
-sequelize.sync()
 
 module.exports.fun= {add,viewAll,update,selectById,deleteUser}
